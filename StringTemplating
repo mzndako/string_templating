@@ -1,0 +1,134 @@
+<?php
+
+class StringTemplating{
+    private $replacer = [];
+    public $start_replace_string = "$";
+    public $end_replace_string = "";
+
+    // Assigning values to be changed
+    public function assign($key, $value)
+    {
+        $this->replacer[$key] = $value;
+    }
+
+    // Call the format method
+    public function format($string){
+        $string = $this->replace_now($string);
+        $string = $this->parse_if($string);
+        return $string;
+    }
+
+    // Replace the assign values
+    private function replace_now($string){
+        foreach($this->replacer as $key => $value){
+            $string = str_replace("{$this->start_replace_string}$key{$this->end_replace_string}", $value, $string);
+        }
+        return $string;
+    }
+
+    // Perform the conditional formating
+    private function parse_if($string){
+        $words = "";
+        $keep = "";
+        $start_if = -1;
+        $condition = "";
+        $skip_next = "";
+        $shown_once = false;
+
+        for($i =0; $i < strlen($string); $i++){
+            $char = $string[$i];
+            $words .= $char;
+
+            if($this->last_letters($words, 4) == "{if "){
+                $start_if = $i - 3;
+                $skip_next = "";
+                $shown_once = false;
+            }
+
+            if($this->last_letters($words, 8) == "{elseif "){
+                $start_if = $i - 3;
+                $skip_next = "";
+                if($shown_once){
+                    $skip_next = true;
+                }
+
+            }
+
+            if($start_if > -1 && $skip_next === ""){
+                if($char == "}"){
+                    $skip_next = !$this->process_condition($condition);
+                    $condition = "";
+                    continue;
+                }
+                $condition .= $char;
+                continue;
+            }
+
+            if($start_if > -1 && $this->last_letters($words, 5) == "{/if}"){
+                $start_if = -1;
+                $skip_next = "";
+                continue;
+            }
+
+            if($start_if > -1 && $this->last_letters($words, 6) == "{else}"){
+                if($shown_once){
+                    $skip_next = true;
+                }else{
+                    $skip_next = false;
+                }
+                continue;
+            }
+
+            if($skip_next === true){
+                continue;
+            }
+            $shown_once = true;
+            $keep .= $char;
+
+        }
+
+        // Replace any if or else tags remaining with empty string
+        return str_ireplace(["{if", "{/if", "{elseif", "{else"], "", $keep);
+
+    }
+
+    private function last_letters($word, $no){
+        return strtolower(substr($word, -$no));
+    }
+
+    // Process the if and elseif condition
+    private function process_condition($condition){
+        $condition = str_ireplace("{if ", "", $condition);
+        $accept = [">","<",">=","<=","==","-!"];
+        $rep = str_replace($accept, ",", $condition);
+        $values = explode(",", $rep);
+        if(count($values) != 2){
+            return false;
+        }
+        $x = trim($values[0]);
+        $y = trim($values[1]);
+        if(strpos($condition, ">") > 0){
+            return (int)$x > (int) $y;
+        }
+
+        if(strpos($condition, "<") > 0){
+            return (int) $x < (int) $y;
+        }
+
+        if(strpos($condition, ">=") > 0){
+            return (int)$x >= (int)$y;
+        }
+
+        if(strpos($condition, "<=") > 0){
+            return (int)$x <= (int)$y;
+        }
+
+        if(strpos($condition, "==") > 0){
+            return $x == $y;
+        }
+
+        if(strpos($condition, "!=") > 0){
+            return $x != $y;
+        }
+    }
+}
