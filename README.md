@@ -1,4 +1,4 @@
-## Advance String Templating
+# Advance String Templating
 Advance String Template with conditional statement similar to smarty and twig.
 
 > Initialling the class
@@ -16,23 +16,31 @@ $template->assign("x", 10);
 - {else}
 - {/if}  
 
-# Example
+> Acceptable operators
+
+>, <, >=, <=, ==, !=
+
+## Example
 ```
-$stringToFormat = 'I love watching $car Cars. {if $type == 1} Where are you now {elseif $type > 4} This is just a sample {else} Else will be ran {/if}";
+$stringToFormat = 'I love watching $car Cars. 
+{if $type == 1} Where are you now 
+{elseif $type > 4} This is just a sample 
+{else} Else will be ran {/if}';
+
 $template = new StringTemplate();
 $template->assign("type", 5);
 $template->assign("car", 'Toyota');
 $formatted = $template->format($stringToFormat);
 
-// $formatted will be
+-- $formatted will return the following
 /**
 I love watching Toyota Cars. This is just a sample
 **/
 ```
 
-> Assign Value type
+> Change Assign Value Format
 
-You can change the assign value symbol used in the string. e.g instead of using $car you can use @@car@@ or {{car}} by change the public method of the start and end tag
+You can change the assign value symbol used in the string. e.g instead of using $car you can use @@car@@ or {{car}} by changing the start and end replace string public method of the class.
 ```
 $template->$start_replace_string = "@@";
 $template->$end_replace_string = "@@";
